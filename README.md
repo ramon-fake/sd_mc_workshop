@@ -20,7 +20,8 @@ The repository will include:
 Details on how to participate, including registration information and prerequisites for the workshop.
 
 ## Contact
-For more information or inquiries, contact the organizers.
+For more information or inquiries, contact the organizers through [this page](https://www.ppgf.eventos.ufpa.br/Workshop_DSAFA_2023/index.html)
+
 
 ## Acknowledgments
 Thanks to PPGF, CNPq, CAPES and INCT for their support in making this workshop possible.
