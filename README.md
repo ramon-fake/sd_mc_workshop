@@ -24,4 +24,3 @@ For more information or inquiries, contact the organizers.
 
 ## Acknowledgments
 Thanks to PPGF, CNPq, CAPES and INCT for their support in making this workshop possible.
-"""
