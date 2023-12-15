@@ -9,7 +9,7 @@ The workshop will be conducted in a hybrid format, featuring online lectures and
 ## Instructors
 - **Ramon Cardias**
 - **Ivan de Paula Miranda**
-- **Ângela Klautau**: 
+- **Ângela Klautau**
 
 ## Contents
 The repository will include:
