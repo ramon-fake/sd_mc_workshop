@@ -4,11 +4,11 @@ program poormans_spin_dynamics
 
     integer, parameter :: dp = kind(1.0d0)
     real(dp), parameter :: gamma = 1.76e11_dp                  ! gyromagnetic ratio in rad/(s·T)
-    real(dp), parameter :: dt = 1.0e-16
+    real(dp), parameter :: dt = 1.0e-15
     real(dp), parameter :: pi = 3.1415926535897931_dp
-    real(dp) :: alpha = 2.00_dp
-    integer, parameter :: num_atoms = 67
-    integer, parameter :: num_steps = 900000
+    real(dp) :: alpha = 1.00_dp
+    integer, parameter :: num_atoms = 10
+    integer, parameter :: num_steps = 1000000 
     real(dp), allocatable :: spins(:,:), lattice(:,:), H_eff(:,:), Jij(:,:), temp_spin(:), energies(:)
     real(dp), allocatable, dimension(:, :, :) :: Dij
     real(dp) :: energy
@@ -82,8 +82,8 @@ contains
         H_eff = 0.0_dp
         do i = 1, num_atoms
             do j = 1, num_atoms
-                if (i /= j) then
-                    H_eff(:, i) = H_eff(:, i) + Jij(i, j) * spins(:, j)  + cross_product(Dij(:, i, j), spins(:, j)) 
+                if(i/=j)then
+                    H_eff(:, i) = H_eff(:, i) + Jij(i, j) * spins(:, j)  +  cross_product(spins(:,j),Dij(:, i, j))
                 end if
             end do
         end do
@@ -95,17 +95,15 @@ contains
         real(dp), intent(out) :: energy
         integer :: i, j
         real(dp) :: r_ij(3), norm_r_ij, dot_prod
-
+        
         energy = 0.0D0
-
-        do i = 1, num_atoms-1
-            do j = i+1, num_atoms
-                r_ij = lattice(:, j) - lattice(:, i)
-                norm_r_ij = sqrt(sum(r_ij**2))
-                r_ij = r_ij / norm_r_ij
-
+                
+        do i = 1, num_atoms
+            do j = 1, num_atoms
+              if(i/=j)then
                 dot_prod = dot_product(spins(:, i), spins(:, j))
                 energy = energy - Jij(i, j) * dot_prod - dot_product(Dij(:, i, j), cross_product(spins(:, i), spins(:, j)))
+              end if
             end do
         end do
     end subroutine calculate_energy

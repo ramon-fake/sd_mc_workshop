@@ -1,7 +1,8 @@
 program SpinMonteCarlo
     implicit none
     integer, parameter :: dp = selected_real_kind(15, 307)  ! Double precision
-    integer, parameter :: num_atoms = 67  ! Adjust based on your lattice
+    real(dp), parameter :: k_bolt_mry = 0.00633
+    integer, parameter :: num_atoms = 3   ! Adjust based on your lattice
     real(dp), dimension(3, num_atoms) :: lattice, spins
     real(dp), allocatable :: energies(:), deltae(:)
     real(dp) :: Jij(num_atoms, num_atoms), Dij(3, num_atoms, num_atoms), energy
@@ -17,12 +18,12 @@ program SpinMonteCarlo
     call init_config(spins)
 
 
-    T = 0.00001d0
+    T = 0.000
     allocate(energies(900000),deltae(900000))
     energies = 0.0D0
 
     ! Monte Carlo loop
-    do step = 1, 500000 
+    do step = 1, 900000
         call monte_carlo_step(spins, lattice, Jij, Dij, T, dE)
         call calculate_energy(spins, lattice, Jij, Dij, energy)
 
@@ -33,7 +34,7 @@ program SpinMonteCarlo
     call write_jmol(spins, lattice)
 
     ! Print energy as a function of MC steps
-    call print_energy(energies, 500000) 
+    call print_energy(energies, 900000) 
 
     call calculate_angles(spins, num_atoms)
 contains
@@ -89,7 +90,7 @@ contains
 
     function energy_difference(i, spins, original_spin, lattice, Jij, Dij) result(dE)
         integer, intent(in) :: i
-        real(dp), intent(in) :: spins(3, num_atoms), original_spin(3), lattice(3, num_atoms)
+        real(dp), intent(in) :: spins(3, num_atoms), original_spin(3, num_atoms), lattice(3, num_atoms)
         real(dp), intent(in) :: Jij(num_atoms, num_atoms), Dij(3, num_atoms, num_atoms)
         real(dp) :: dE, E_new, E_old
         integer :: j
@@ -98,20 +99,9 @@ contains
         E_new = 0.0D0
         E_old = 0.0D0
     
-        do j = 1, num_atoms
-            if (j /= i) then
-                r_ij = lattice(:, j) - lattice(:, i)
-                norm_r_ij = sqrt(sum(r_ij**2))
-                r_ij = r_ij / norm_r_ij
-    
-                dot_prod_new = dot_product(spins(:, i), spins(:, j))
-                dot_prod_old = dot_product(original_spin, spins(:, j))
-    
-                E_new = E_new - Jij(i, j) * dot_prod_new  - dot_product(Dij(:,i,j),cross(spins(:, i), spins(:, j)))
-                E_old = E_old - Jij(i, j) * dot_prod_old  - dot_product(Dij(:,i,j),cross(original_spin, spins(:, j)))
-            endif
-        end do
-    
+        call calculate_energy(spins, lattice, Jij, Dij, E_new)
+        call calculate_energy(original_spin, lattice, Jij, Dij, E_old)
+
         dE = E_new - E_old
     end function energy_difference
 
@@ -124,18 +114,15 @@ contains
     
         energy = 0.0D0
     
-        do i = 1, num_atoms-1
-            do j = i+1, num_atoms
-                r_ij = lattice(:, j) - lattice(:, i)
-                norm_r_ij = sqrt(sum(r_ij**2))
-                r_ij = r_ij / norm_r_ij
-    
+        do i = 1, num_atoms  
+            do j = 1, num_atoms
+              if(i/=j)then 
                 dot_prod = dot_product(spins(:, i), spins(:, j))
                 energy = energy - Jij(i, j) * dot_prod - dot_product(Dij(:, i, j), cross(spins(:, i), spins(:, j)))
+              end if
             end do
         end do
     end subroutine calculate_energy
-
 
 
     function cross(a, b) result(c)
@@ -151,15 +138,15 @@ contains
         real(dp), intent(in) :: T
         real(dp), intent(out) :: dE
         integer :: i
-        real(dp) :: original_spin(3)
+        real(dp) :: original_spin(3,num_atoms)
         call random_seed()
         i = int(rand() * num_atoms) + 1
-        original_spin = spins(:, i)
+        original_spin(:,:) = spins(:,:)
         call random_spin(spins(:, i))
         dE = energy_difference(i, spins, original_spin, lattice, Jij, Dij)
-        write(10,*) rand(), exp(-dE / T), dE
-        if (dE > 0.0D0 .and. rand() >= exp(-dE / T)) then
-            spins(:, i) = original_spin
+        write(10,*) exp(-dE / (k_bolt_mry*T)), dE, k_bolt_mry*T,  -(dE / k_bolt_mry*T)
+        if (dE > 0.0D0 .and. rand() >= exp(-dE / (k_bolt_mry*T))) then
+            spins(:, :) = original_spin(:, :)
         endif
     end subroutine monte_carlo_step
 
