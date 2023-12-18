@@ -1,0 +1,5 @@
+#!/bin/bash 
+pasta_source="/proj/snic2014-8-7/users/x_ivami/UppASD-skyrminator/UppASD/source"
+export OMP_NUM_THREADS=32
+echo -ne "Calculando para o Pd/Fe/Ir(111)... "
+${pasta_source}/sd 

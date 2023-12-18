@@ -1,0 +1,61 @@
+simid PdFeIr111
+ncell   100       100         1                 System size
+BC        P         P         0                 Boundary conditions (0=vacuum,P=periodic)
+cell 0.1830127019      0.6830127019      0.000000
+     0.6830127019      0.1830127019      0.000000
+     0.0000000000      0.0000000000      1.000000
+Sym       0                                     Symmetry of lattice (0 for no, 1 for cubic, 2 for 2d cubic, 3 for hexagonal)
+
+posfile  ./posfile
+exchange ./jfile 
+momfile  ./momfile
+anisotropy ./kfile
+dm ./dm
+
+Mensemble 1
+maptype 1
+posfiletype C
+
+do_prnstruct 0                                  Print lattice structure (0=no, 1=yes)
+
+Initmag   1                                     (1=random, 2=cone, 3=spec., 4=file)
+
+ip_mode H                                         Initial phase parameters
+ip_mcanneal 15
+  20000    700.0
+  20000    500.0
+  20000    300.0
+  20000    100.0
+  20000     80.0
+  20000     60.0
+  20000     30.0
+  20000     20.0
+  20000     10.0
+  25000      5.0
+  25000      3.0
+  25000      1.0
+  25000      0.1
+  25000      0.01
+  30000      0.0001
+ip_hfield 0.0 0.0 2.5
+
+
+mode      S                                     S=SD, M=MC           
+Temp      0.0001         K                     Measurement phase parameters
+damping   0.05                                Damping parameter
+Nstep     20000                                 Number of time-steps
+timestep  1.000e-16        s                    The time step-size for the SDE-solver
+hfield 0.0 0.0 2.5
+
+do_proj_avrg Y
+
+plotenergy   1
+do_cumu Y
+cumu_step 50
+cumu_buff 10
+do_avrg Y
+do_tottraj N                                    Measure moments
+avrg_step 100
+avrg_buff 10
+skyno T
+alat 3.84e-10
