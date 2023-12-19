@@ -1,13 +1,25 @@
 program SpinMonteCarlo
     implicit none
-    integer, parameter :: dp = selected_real_kind(15, 307)  ! Double precision
+    ! Precision
+    integer, parameter :: dp = kind(1.0d0)
+    ! Parameters
+    integer, parameter :: num_atoms = 3   
+    integer, parameter :: num_steps = 100000 
     real(dp), parameter :: k_bolt_mry = 0.00633
-    integer, parameter :: num_atoms = 3   ! Adjust based on your lattice
-    real(dp), dimension(3, num_atoms) :: lattice, spins
-    real(dp), allocatable :: energies(:), deltae(:)
-    real(dp) :: Jij(num_atoms, num_atoms), Dij(3, num_atoms, num_atoms), energy
+    real(dp), parameter :: pi = 3.1415926535897931_dp
+    ! Variables
+    real(dp), allocatable :: energies(:), deltae(:), lattice(:,:), spins(:,:), Jij(:,:), Dij(:,:,:)
+    real(dp) :: energy, T, dE
     integer :: step, i, j
-    real(dp) :: T, dE
+
+
+    allocate(spins(3, num_atoms))
+    allocate(lattice(3, num_atoms))
+    allocate(Jij(num_atoms, num_atoms)) 
+    allocate(Dij(3, num_atoms, num_atoms))
+    allocate(energies(num_steps))
+    allocate(deltae(num_steps))
+
 
     Jij = 0.0d0
     Dij = 0.0d0
@@ -15,11 +27,11 @@ program SpinMonteCarlo
     call read_lattice(lattice)
     call read_jij(Jij)
     call read_dij(Dij)
+
+    ! Initialize spins with random values
     call init_config(spins)
 
-
     T = 0.000
-    allocate(energies(900000),deltae(900000))
     energies = 0.0D0
 
     ! Monte Carlo loop
@@ -34,9 +46,12 @@ program SpinMonteCarlo
     call write_jmol(spins, lattice)
 
     ! Print energy as a function of MC steps
-    call print_energy(energies, 900000) 
+    call print_energy(energies, num_steps) 
 
     call calculate_angles(spins, num_atoms)
+
+    ! End of the main program
+    deallocate(spins,lattice,Jij,Dij,energies)
 contains
 
     subroutine read_lattice(lattice)
@@ -75,7 +90,7 @@ contains
     subroutine random_spin(spin)
         real(dp), intent(out) :: spin(3)
         real(dp) :: theta, phi
-        theta = 2 * 3.141592653589793D0 * rand()
+        theta = 2 * pi * rand()
         phi = acos(2 * rand() - 1.0D0)
         spin = [sin(phi) * cos(theta), sin(phi) * sin(theta), cos(phi)]
     end subroutine random_spin
@@ -154,7 +169,8 @@ contains
         real(dp), intent(in) :: spins_in(3, num_atoms), lattice_in(3, num_atoms)
         integer :: unit_num, i
         unit_num = 40
-        open(unit_num, file="jmol.xyz", status="unknown")
+        open(unit_num, file="jmol-mc.xyz", status="unknown")
+
         write(unit_num, '(I10)') num_atoms
         write(unit_num, '(A)') "Final Spin Configuration"
         do i = 1, num_atoms

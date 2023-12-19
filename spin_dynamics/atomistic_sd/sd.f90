@@ -1,14 +1,15 @@
-program poormans_spin_dynamics
-
+program spin_dynamics
     implicit none
-
+    ! Precision
     integer, parameter :: dp = kind(1.0d0)
-    real(dp), parameter :: gamma = 1.76e11_dp                  ! gyromagnetic ratio in rad/(s·T)
+    ! Parameters
+    real(dp), parameter :: gamma = 1.76e11_dp                  
     real(dp), parameter :: dt = 1.0e-15
     real(dp), parameter :: pi = 3.1415926535897931_dp
     real(dp) :: alpha = 1.00_dp
-    integer, parameter :: num_atoms = 10
-    integer, parameter :: num_steps = 1000000 
+    integer, parameter :: num_atoms = 3 
+    integer, parameter :: num_steps = 500000 
+    ! Variables
     real(dp), allocatable :: spins(:,:), lattice(:,:), H_eff(:,:), Jij(:,:), temp_spin(:), energies(:)
     real(dp), allocatable, dimension(:, :, :) :: Dij
     real(dp) :: energy
@@ -204,20 +205,19 @@ contains
         close(unit_num)
     end subroutine write_spin_moments
 
-    subroutine write_jmol(spins, lattice)
+    subroutine write_jmol(spins_in, lattice_in)
         implicit none
-        real(dp), intent(in) :: spins(3, num_atoms), lattice(3, num_atoms)
+        real(dp), intent(in) :: spins_in(3, num_atoms), lattice_in(3, num_atoms)
         integer :: i
         integer, parameter :: unit_num = 50
     
-        open(unit_num, file="final_config.jmol", status="unknown")
+        open(unit_num, file="jmol-sd.xyz", status="unknown")
         
-        write(unit_num,*) num_atoms
-        write(unit_num,*) 
+        write(unit_num, '(I10)') num_atoms
+        write(unit_num, '(A)') "Final Spin Configuration"
         do i = 1, num_atoms
-            write(unit_num, '(A4, 3F12.6, 3F12.6)') 'Fe', lattice(:, i), spins(:, i)
+            write(unit_num, '(A, 3F12.6, A, 3F12.6)') "Fe", lattice_in(:, i), " ", spins_in(:, i)
         end do
-    
         close(unit_num)
     end subroutine write_jmol
 
@@ -243,13 +243,11 @@ contains
     end subroutine print_energy
 
     subroutine calculate_angles(spins, num_atoms)
-        use, intrinsic :: iso_fortran_env, only: dp => real64
         implicit none
         real(dp), intent(in) :: spins(3, num_atoms)
         integer, intent(in) :: num_atoms
         integer :: i, j, unit_num
         real(dp) :: angle, angle_degrees, dot_prod
-        real(dp), parameter :: pi = 3.14159265358979323846D0
     
         open(unit_num, file="angles.out", status="unknown")
     
@@ -264,7 +262,6 @@ contains
         end do
     
         close(unit_num)
-    
     end subroutine calculate_angles
 
-end program poormans_spin_dynamics
+end program spin_dynamics
