@@ -7,7 +7,7 @@ program spin_dynamics
     real(dp), parameter :: dt = 1.0e-15
     real(dp), parameter :: pi = 3.1415926535897931_dp
     real(dp) :: alpha = 1.00_dp
-    integer, parameter :: num_atoms = 3 
+    integer, parameter :: num_atoms = 10
     integer, parameter :: num_steps = 500000 
     ! Variables
     real(dp), allocatable :: spins(:,:), lattice(:,:), H_eff(:,:), Jij(:,:), temp_spin(:), energies(:)
@@ -15,6 +15,7 @@ program spin_dynamics
     real(dp) :: energy
     integer :: step, i, j
 
+    ! novo
     allocate(spins(3, num_atoms))
     allocate(lattice(3, num_atoms))
     allocate(H_eff(3, num_atoms))
@@ -37,9 +38,9 @@ program spin_dynamics
     do step = 1, num_steps
         call compute_Heff(spins, lattice, Jij, Dij, H_eff, num_atoms)
         call llg_update(spins, H_eff, dt, gamma, alpha, num_atoms)
-        call write_spin_moments(spins, step)
+        call write_spin_moments(spins, lattice, step)
         call calculate_energy(spins, lattice, Jij, Dij, energy)
-
+        call writeLAMMPSTraj(spins, lattice, step)
         energies(step) = energy   
     end do
 
@@ -48,7 +49,7 @@ program spin_dynamics
     ! Print energy as a function of MC steps
     call print_energy(energies, num_steps)
 
-    call calculate_angles(spins, num_atoms)
+    call calculate_angles(spins,  num_atoms)
 
 
     ! End of main program
@@ -180,10 +181,11 @@ contains
     100 close(unit_num)
     end subroutine read_dij
 
-    subroutine write_spin_moments(spins, timestep)
+    subroutine write_spin_moments(spins, lattice, timestep)
         implicit none
         integer, intent(in) :: timestep
         real(dp), intent(in) :: spins(3, num_atoms)
+        real(dp), intent(in) :: lattice(3,num_atoms)
         integer :: i
         integer, parameter :: unit_num = 40
     
@@ -196,7 +198,7 @@ contains
             open(unit_num, file="spin_moments.out", status="old", position="append")
         end if
     
-        write(unit_num, '(I6)', advance='no') timestep
+        write(unit_num, '(F16.2)', advance='no') timestep*1d-15
         do i = 1, num_atoms
             write(unit_num, '(3F12.6)', advance='no') spins(:, i)
         end do
@@ -204,6 +206,40 @@ contains
     
         close(unit_num)
     end subroutine write_spin_moments
+
+    subroutine writeLAMMPSTraj(spins, lattice, timestep)
+        implicit none
+        integer, intent(in) :: timestep
+        real(dp), intent(in) :: spins(3, num_atoms)
+        real(dp), intent(in) :: lattice(3, num_atoms)
+        integer :: i
+        integer, parameter :: unit_num = 40
+    
+        ! Open the file for the first timestep, otherwise append
+        if (timestep == 1) then
+            open(unit_num, file="output.lammpstrj", status="replace", action='write')
+        else
+            open(unit_num, file="output.lammpstrj", status="old", position="append", action='write')
+        end if
+    
+        ! Write headers and data for .lammpstrj format
+        write(unit_num, '(A)') 'ITEM: TIMESTEP'
+        write(unit_num, *) timestep
+        write(unit_num, '(A)') 'ITEM: NUMBER OF ATOMS'
+        write(unit_num, *) num_atoms
+        write(unit_num, '(A)') 'ITEM: BOX BOUNDS xy xz yz'
+        write(unit_num, '(3F12.6)') 1.0, 0.0, 0.0
+        write(unit_num, '(3F12.6)') 0.0, 1.0, 0.0
+        write(unit_num, '(3F12.6)') 0.0, 0.0, 1.0
+        write(unit_num, '(A)') 'ITEM: ATOMS type x y z vx vy vz'
+    
+        do i = 1, num_atoms
+            write(unit_num, '(I4,6F12.6)') 1, 4*lattice(1, i), 4*lattice(2, i), 4*lattice(3, i), &
+                                            spins(1, i), spins(2, i), spins(3, i)
+        end do
+    
+        close(unit_num)
+    end subroutine writeLAMMPSTraj
 
     subroutine write_jmol(spins_in, lattice_in)
         implicit none
