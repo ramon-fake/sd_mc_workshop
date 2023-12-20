@@ -3,7 +3,7 @@ program SpinMonteCarlo
     ! Precision
     integer, parameter :: dp = kind(1.0d0)
     ! Parameters
-    integer, parameter :: num_atoms = 3   
+    integer, parameter :: num_atoms = 10
     integer, parameter :: num_steps = 100000 
     real(dp), parameter :: k_bolt_mry = 0.00633
     real(dp), parameter :: pi = 3.1415926535897931_dp
@@ -35,7 +35,7 @@ program SpinMonteCarlo
     energies = 0.0D0
 
     ! Monte Carlo loop
-    do step = 1, 900000
+    do step = 1, num_steps
         call monte_carlo_step(spins, lattice, Jij, Dij, T, dE)
         call calculate_energy(spins, lattice, Jij, Dij, energy)
 
