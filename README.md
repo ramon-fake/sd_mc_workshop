@@ -13,7 +13,7 @@ The workshop will be conducted in a hybrid format, featuring online lectures and
 
 ## Contents
 The repository will include:
-- Lecture notes and presentation slides.
+- Lecture notes and presentation slides. Teste
 - Example codes and simulation scripts.
 
 ## Participation
